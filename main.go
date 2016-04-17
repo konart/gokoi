@@ -5,19 +5,14 @@ import (
 )
 
 func main() {
-	localDeck := new(Deck)
-	i := 0
-	for j := 0; j < 12; j++ {
-		for k := 0; k < 4; k++ {
-			playingCard := new(Card)
-			playingCard.Value = k
-			playingCard.Suit = j
-			localDeck.Cards[i] = *playingCard
-			i++
-		}
-	}
 
-	fmt.Printf("%v\n", *localDeck)
+	pl1 := Player{Name: "Artem"}
+	pl2 := Player{Name: "Alex"}
+	newRoom := Room{playerOne: pl1, playerTwo: pl2}
+	fmt.Printf("Rooom %v\n", newRoom)
+	localDeck := new(Deck)
+	localDeck.init()
+	fmt.Printf("Deck %v\n", *localDeck)
 	localDeck.Shuffle()
-	fmt.Printf("%v\n", *localDeck)
+	fmt.Printf("Shuffled deck %v\n", *localDeck)
 }
