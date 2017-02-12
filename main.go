@@ -41,16 +41,8 @@ func main() {
 
 	var game Game
 	var deck Deck
-
 	deck = make([]*Card, 48)
-	i := 0
-	for key, value := range cards {
-		for _, group := range value {
-			deck[i] = &Card{key, group}
-			i++
-		}
-	}
-	deck.Shuffle()
+	deck.Prepare()
 	for _, card := range deck {
 		fmt.Println(*card)
 	}

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"time"
 	"math/rand"
+	"time"
 )
 
 var cards = map[string][]string{
@@ -26,6 +26,19 @@ type Card struct {
 }
 
 type Deck []*Card
+
+func (d *Deck) Prepare() {
+
+	//d = make([]*Card, 48)
+	i := 0
+	for key, value := range cards {
+		for _, group := range value {
+			(*d)[i] = &Card{key, group}
+			i++
+		}
+	}
+	d.Shuffle()
+}
 
 func (d *Deck) PickCard() (c *Card) {
 	topCardIndex := len(*d) - 1
