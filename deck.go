@@ -1,53 +1,51 @@
 package main
 
 import (
-	"math/rand"
 	"time"
+	"math/rand"
 )
 
+var cards = map[string][]string{
+	"Pine":          {"plain1", "plain2", "ribbon", "bright"},
+	"Plum":          {"plain1", "plain2", "ribbon", "animal"},
+	"Sakura":        {"plain1", "plain2", "ribbon", "bright"},
+	"Wisteria":      {"plain1", "plain2", "ribbon", "animal"},
+	"Iris":          {"plain1", "plain2", "ribbon", "animal"},
+	"Peony":         {"plain1", "plain2", "ribbon", "animal"},
+	"Clover":        {"plain1", "plain2", "ribbon", "animal"},
+	"Pampas":        {"plain1", "plain2", "animal", "bright"},
+	"Chrysanthemum": {"plain1", "plain2", "ribbon", "animal"},
+	"Maple":         {"plain1", "plain2", "ribbon", "animal"},
+	"Willow":        {"plain1", "ribbon", "animal", "bright"},
+	"Paulownia":     {"plain1", "plain2", "plain3", "bright"},
+}
+
 type Card struct {
-	Suit  int
-	Value int
+	suit  string
+	group string
 }
 
-type CardArray struct {
-	Cards [48]Card
+type Deck []*Card
+
+func (d *Deck) PickCard() (c *Card) {
+	topCardIndex := len(*d) - 1
+	c = (*d)[topCardIndex]
+	*d = (*d)[:topCardIndex]
+	return
 }
 
-type Combination struct {
-	// TODO: this one needs something to tie it to cards
-	cardsLeft int
+func (d *Deck) OpenCard() (c *Card) {
+	topCardIndex := len(*d) - 1
+	c = (*d)[topCardIndex]
+	return
 }
-
-type Deck CardArray
-
-type Hand CardArray
-
-type OpenHand CardArray
 
 func (d *Deck) Shuffle() {
-	var tempDeck [len(d.Cards)]Card
+	tempDeck := make([]*Card, 48)
 	rand.Seed(time.Now().UTC().UnixNano())
-	list := rand.Perm(len(d.Cards))
+	list := rand.Perm(48)
 	for i, v := range list {
-		tempDeck[i] = d.Cards[v]
+		tempDeck[i] = (*d)[v]
 	}
-	d.Cards = tempDeck
-}
-
-func (d *Deck) init() {
-	i := 0
-	for j := 0; j < 12; j++ {
-		for k := 0; k < 4; k++ {
-			playingCard := new(Card)
-			playingCard.Value = k
-			playingCard.Suit = j
-			d.Cards[i] = *playingCard
-			i++
-		}
-	}
-}
-
-func (o *OpenHand) link(*Card, *Combination) {
-
+	*d = tempDeck
 }
