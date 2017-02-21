@@ -32,6 +32,8 @@ func (h *Hub) run() {
 	for {
 		select {
 		case client := <-h.register:
+			msg := []byte{'0'}
+			client.send <- msg
 			h.players[client] = true
 			// here we should create a new game instance,
 			// add it to the active games pool
