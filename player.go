@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"fmt"
 	"github.com/gorilla/websocket"
 )
 
@@ -31,7 +32,7 @@ var (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool { return true }, // dev only
+	CheckOrigin:     func(r *http.Request) bool { return true }, // dev only
 }
 
 // Client is a middleman between the websocket connection and the hub.
@@ -73,6 +74,8 @@ func (c *Player) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		playerName := append([]byte(c.name), []byte(": ")...)
+		message = append(playerName, message...)
 		c.hub.broadcast <- message
 	}
 }
@@ -130,7 +133,9 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	client := &Player{hub: hub, conn: conn, send: make(chan []byte, 256)}
+	numberOfPlayers := len(hub.players)
+	newPlayerName := fmt.Sprint("Player", numberOfPlayers)
+	client := &Player{hub: hub, conn: conn, send: make(chan []byte, 256), name: newPlayerName}
 	client.hub.register <- client
 	go client.writePump()
 	client.readPump()
