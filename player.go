@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"fmt"
+	"github.com/gorilla/websocket"
 )
 
 const (
@@ -32,7 +32,7 @@ var (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool { return true }, // dev only
+	CheckOrigin:     func(r *http.Request) bool { return true }, // dev only
 }
 
 // Client is a middleman between the websocket connection and the hub.
@@ -55,16 +55,16 @@ type Player struct {
 // The application runs readPump in a per-connection goroutine. The application
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
-func (c *Player) readPump() {
+func (p *Player) readPump() {
 	defer func() {
-		c.game.unregister <- c
-		c.conn.Close()
+		p.game.unregister <- p
+		p.conn.Close()
 	}()
-	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	p.conn.SetReadLimit(maxMessageSize)
+	p.conn.SetReadDeadline(time.Now().Add(pongWait))
+	p.conn.SetPongHandler(func(string) error { p.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		_, message, err := c.conn.ReadMessage()
+		_, message, err := p.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
 				log.Printf("error: %v", err)
@@ -74,7 +74,7 @@ func (c *Player) readPump() {
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		fmt.Print("Message: ")
 		fmt.Println(message)
-		c.game.broadcast <- message
+		p.game.broadcast <- message
 	}
 }
 
@@ -83,41 +83,41 @@ func (c *Player) readPump() {
 // A goroutine running writePump is started for each connection. The
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
-func (c *Player) writePump() {
+func (p *Player) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		c.conn.Close()
+		p.conn.Close()
 	}()
 	for {
 		select {
-		case message, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+		case message, ok := <-p.send:
+			p.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				p.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
-			w, err := c.conn.NextWriter(websocket.TextMessage)
+			w, err := p.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
 				return
 			}
 			w.Write(message)
 
 			// Add queued chat messages to the current websocket message.
-			n := len(c.send)
+			n := len(p.send)
 			for i := 0; i < n; i++ {
 				w.Write(newline)
-				w.Write(<-c.send)
+				w.Write(<-p.send)
 			}
 
 			if err := w.Close(); err != nil {
 				return
 			}
 		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := c.conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+			p.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := p.conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				return
 			}
 		}
@@ -145,7 +145,6 @@ func serveWs(hub *Hub, gameId int64, w http.ResponseWriter, r *http.Request) {
 
 	go player.writePump()
 	player.readPump()
-
 
 	//client := &Player{hub: hub, conn: conn, send: make(chan []byte, 256)}
 	//client.hub.register <- client
