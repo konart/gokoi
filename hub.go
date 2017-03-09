@@ -5,8 +5,9 @@ package main
 type Hub struct {
 	// Registered clients.
 	players map[*Player]bool
+
 	// Active games
-	games map[*Game]bool
+	games map[int64]*Game
 
 	// Inbound messages from the clients.
 	broadcast chan []byte
@@ -24,8 +25,25 @@ func newHub() *Hub {
 		register:   make(chan *Player),
 		unregister: make(chan *Player),
 		players:    make(map[*Player]bool),
-		games:      make(map[*Game]bool),
+		games:      make(map[int64]*Game),
 	}
+}
+
+func (h *Hub) gameExists(id int64) bool {
+	game := h.games[id]
+	if game != nil {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (h *Hub) findGame(id int64) (game *Game) { // old (game *Game, err error)
+	game = h.games[id]
+	if game == nil {
+		game = &Game{}
+	}
+	return game //, err
 }
 
 func (h *Hub) run() {
@@ -35,17 +53,6 @@ func (h *Hub) run() {
 			msg := []byte{'0'}
 			client.send <- msg
 			h.players[client] = true
-			// here we should create a new game instance,
-			// add it to the active games pool
-			// tie player to the game
-			game := &Game{
-				table:   make([]*Card, 0),
-				players: make([]*Player, 2),
-				id:      len(h.games), // should be unique in future
-				deck:    make([]*Card, 48),
-			}
-			h.games[game] = true
-
 		case client := <-h.unregister:
 			if _, ok := h.players[client]; ok {
 				delete(h.players, client)

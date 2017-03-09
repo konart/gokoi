@@ -3,9 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"strconv"
 	"text/template"
+	"time"
 )
 
 var addr = flag.String("addr", ":8080", "http service address")
@@ -30,14 +33,58 @@ func main() {
 	flag.Parse()
 	hub := newHub()
 	go hub.run()
-	http.HandleFunc("/", serveHome)
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		serveWs(hub, w, r)
+
+	r := mux.NewRouter()
+	r.HandleFunc("/", serveHome)
+
+	// New game (restrict to POST?)
+	r.HandleFunc("/games", func(w http.ResponseWriter, r *http.Request) {
+		handleGames(hub, -1, w, r)
 	})
-	err := http.ListenAndServe(*addr, nil)
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
+
+	// Check for existing game (restrict to GET?)
+	r.HandleFunc("/games/{gameId:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
+		gameId, err := strconv.ParseInt(mux.Vars(r)["gameId"], 10, 64)
+		if err != nil {
+			log.Fatal("Games Request Handler: ", err)
+			return
+		}
+		handleGames(hub, gameId, w, r)
+	})
+
+	//r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+	//	serveWs(hub, -1, w, r)
+	//})
+
+	// Handle ws for a game
+	r.HandleFunc("/ws/{gameId:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
+		gameId, err := strconv.ParseInt(mux.Vars(r)["gameId"], 10, 64)
+		if err != nil {
+			log.Fatal("Request Handler: ", err)
+			return
+		}
+		serveWs(hub, gameId, w, r)
+	})
+	http.Handle("/", r)
+
+	srv := &http.Server{
+		Handler: r,
+		Addr:    "127.0.0.1:8000",
+		// Good practice: enforce timeouts for servers you create!
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
 	}
+
+	log.Fatal(srv.ListenAndServe())
+
+	//http.HandleFunc("/", serveHome)
+	//http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+	//	serveWs(hub, w, r)
+	//})
+	//err := http.ListenAndServe(*addr, nil)
+	//if err != nil {
+	//	log.Fatal("ListenAndServe: ", err)
+	//}
 
 	var game Game
 	var deck Deck

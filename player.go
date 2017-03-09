@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"fmt"
 )
 
 const (
@@ -36,8 +37,6 @@ var upgrader = websocket.Upgrader{
 
 // Client is a middleman between the websocket connection and the hub.
 type Player struct {
-	hub *Hub
-
 	// The websocket connection.
 	conn *websocket.Conn
 
@@ -58,7 +57,7 @@ type Player struct {
 // reads from this goroutine.
 func (c *Player) readPump() {
 	defer func() {
-		c.hub.unregister <- c
+		c.game.unregister <- c
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
@@ -73,7 +72,9 @@ func (c *Player) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
+		fmt.Print("Message: ")
+		fmt.Println(message)
+		c.game.broadcast <- message
 	}
 }
 
@@ -124,16 +125,32 @@ func (c *Player) writePump() {
 }
 
 // serveWs handles websocket requests from the peer.
-func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+func serveWs(hub *Hub, gameId int64, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	client := &Player{hub: hub, conn: conn, send: make(chan []byte, 256)}
-	client.hub.register <- client
-	go client.writePump()
-	client.readPump()
+
+	// Find game
+	game := hub.findGame(gameId)
+	fmt.Print("GameID: ")
+	fmt.Println(game.id)
+
+	// Create client
+	player := &Player{game: game, conn: conn, send: make(chan []byte, 256)}
+
+	// Add to game
+	player.game.register <- player
+
+	go player.writePump()
+	player.readPump()
+
+
+	//client := &Player{hub: hub, conn: conn, send: make(chan []byte, 256)}
+	//client.hub.register <- client
+	//go client.writePump()
+	//client.readPump()
 }
 
 type Hand []*Card
