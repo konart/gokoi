@@ -9,8 +9,8 @@ type Table []*Card
 
 type Game struct {
 	table Table
-	id int64
-	deck Deck
+	id    int64
+	deck  Deck
 
 	// Registered clients.
 	players map[*Player]bool
@@ -26,8 +26,14 @@ type Game struct {
 }
 
 func newGame(h *Hub) (id int64) {
-	game := &Game{id:1} // generate uuid
-	go game.start()
+	game := &Game{
+		id:         1,
+		register:   make(chan *Player),
+		unregister: make(chan *Player),
+		broadcast:  make(chan []byte),
+		players:    make(map[*Player]bool),
+	} // generate uuid
+	//go game.start()
 	h.games[game.id] = game
 	id = game.id
 	return id
