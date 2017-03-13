@@ -33,7 +33,7 @@ func newGame(h *Hub) (id int64) {
 		broadcast:  make(chan []byte),
 		players:    make(map[*Player]bool),
 	} // generate uuid
-	//go game.start()
+	go game.start()
 	h.games[game.id] = game
 	id = game.id
 	return id
