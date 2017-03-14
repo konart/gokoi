@@ -3,6 +3,8 @@ package main
 import (
 	"net/http"
 	"strconv"
+	"fmt"
+	"log"
 )
 
 type Table []*Card
@@ -25,9 +27,26 @@ type Game struct {
 	unregister chan *Player
 }
 
+func (g *Game) hasBothPlayers() bool {
+	if len(g.players) == 2 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (g *Game) hasEmptySlots() bool {
+	if len(g.players) < 2 {
+		return true
+	} else {
+		return false
+	}
+}
+
 func newGame(h *Hub) (id int64) {
 	game := &Game{
 		id:         1,
+		deck:       make([]*Card, 48),
 		register:   make(chan *Player),
 		unregister: make(chan *Player),
 		broadcast:  make(chan []byte),
@@ -46,7 +65,13 @@ func handleGames(hub *Hub, gameId int64, w http.ResponseWriter, r *http.Request)
 			w.Header().Set("Server", "A Go Web Server")
 			w.WriteHeader(200)
 			w.Write([]byte("Found: "))
-			w.Write([]byte(strconv.FormatInt(gameId, 16))) // replace with json
+			game := hub.findGame(gameId)
+			if game.hasEmptySlots() {
+				w.Write([]byte(strconv.FormatInt(gameId, 16))) // replace with json
+			} else {
+				log.Printf("The game with id %d has all slots full", gameId)
+				w.Write([]byte(fmt.Sprintf("The game with id %d has all slots full", gameId)))  // replace with json
+			}
 		} else {
 			w.Header().Set("Server", "A Go Web Server")
 			w.WriteHeader(200)
@@ -65,23 +90,39 @@ func (g *Game) start() {
 	for {
 		select {
 		case player := <-g.register:
-			msg := []byte("registered")
-			player.send <- msg
 			g.players[player] = true
+			message := fmt.Sprintf("Player %d connected", len(g.players))
+			g.sendToBoth(message)
+			if g.hasBothPlayers() {
+				g.deck.Prepare()
+				card := g.deck.OpenCard()
+				message := fmt.Sprintf("{suit: %s, group: %s}", card.suit, card.group)
+				g.sendToBoth(message)
+			}
 		case player := <-g.unregister:
 			if _, ok := g.players[player]; ok {
 				delete(g.players, player)
 				close(player.send)
 			}
 		case message := <-g.broadcast:
-			for client := range g.players {
+			for player := range g.players {
 				select {
-				case client.send <- message:
+				case player.send <- message:
 				default:
-					close(client.send)
-					delete(g.players, client)
+					close(player.send)
+					delete(g.players, player)
 				}
 			}
 		}
+	}
+}
+
+func (game *Game) sendToPlayer(player *Player, message string) {
+	player.send <- []byte(message)
+}
+
+func (game *Game) sendToBoth(message string) {
+	for player := range game.players {
+		player.send <- []byte(message)
 	}
 }
