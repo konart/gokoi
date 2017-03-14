@@ -124,34 +124,6 @@ func (p *Player) writePump() {
 	}
 }
 
-// serveWs handles websocket requests from the peer.
-func serveWs(hub *Hub, gameId int64, w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	// Find game
-	game := hub.findGame(gameId)
-	fmt.Print("GameID: ")
-	fmt.Println(game.id)
-
-	// Create client
-	player := &Player{game: game, conn: conn, send: make(chan []byte, 256)}
-
-	// Add to game
-	player.game.register <- player
-
-	go player.writePump()
-	player.readPump()
-
-	//client := &Player{hub: hub, conn: conn, send: make(chan []byte, 256)}
-	//client.hub.register <- client
-	//go client.writePump()
-	//client.readPump()
-}
-
 type Hand []*Card
 
 type Combination interface {
