@@ -25,6 +25,24 @@ type Card struct {
 	group string
 }
 
+func (card *Card) checkCriteria(criteria map[string]string) (passed bool) {
+	passed = false
+	for k, v := range criteria {
+		counter := 0
+		switch k {
+		case "suit":
+			if card.suit == v {counter += 1}
+		case "group":
+			if card.group == v {counter += 1}
+		}
+		if counter == len(criteria) {
+			passed = true
+			return
+		}
+	}
+	return
+}
+
 type Deck []*Card
 
 func (d *Deck) Prepare() {

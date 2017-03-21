@@ -46,6 +46,7 @@ type Player struct {
 	game       *Game
 	openHand   Hand
 	closedHand Hand
+	yakus      []Yaku
 	name       string
 	id         int
 }
@@ -125,17 +126,3 @@ func (p *Player) writePump() {
 }
 
 type Hand []*Card
-
-type Combination interface {
-	Satisfies(c *Card) bool
-}
-
-type Yaku struct {
-	combinesWith *Yaku
-	blocks       *Yaku
-	collected    bool
-}
-
-func (y *Yaku) Satisfies(c *Card) bool {
-	return true
-}
