@@ -25,8 +25,7 @@ type Card struct {
 	group string
 }
 
-func (card *Card) checkCriteria(criteria map[string]string) (passed bool) {
-	passed = false
+func (card *Card) checkCriteria(criteria map[string]string) bool {
 	for k, v := range criteria {
 		counter := 0
 		switch k {
@@ -36,11 +35,10 @@ func (card *Card) checkCriteria(criteria map[string]string) (passed bool) {
 			if card.group == v {counter += 1}
 		}
 		if counter == len(criteria) {
-			passed = true
-			return
+			return true
 		}
 	}
-	return
+	return false
 }
 
 type Deck []*Card
