@@ -1,22 +1,13 @@
 package logic
 
-
-//var (
-//	newline = []byte{'\n'}
-//	space   = []byte{' '}
-//)
-
-type Hand []*card
+type hand struct {
+	cardHolder
+}
 
 type Player struct {
-	openHand   Hand
-	closedHand Hand
+	openHand   hand
+	closedHand hand
 	//yakus      []Yaku
 	name       string
 	id         int
 }
-
-
-
-
-

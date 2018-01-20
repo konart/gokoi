@@ -50,7 +50,7 @@ func (d *deck) Shuffle() {
 	*d = tempDeck
 }
 
-func (d deck) HasCard(c *card) bool {
+func (d deck) hasCard(c *card) bool {
 	for i := range d {
 		if d[i].group == c.group && d[i].suit == c.suit {
 			return true
