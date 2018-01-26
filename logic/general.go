@@ -1,20 +1,15 @@
 package logic
 
 type cardHolder struct {
-	cards []*card
+	cards map[*card]bool
 }
 
 func (t *cardHolder) add(c *card) {
-	t.cards = append(t.cards, c)
+	t.cards[c] = true
 }
 
 func (t cardHolder) hasCard(c *card) bool {
-	for i := range t.cards {
-		if t.cards[i].suit == c.suit && t.cards[i].group == c.group {
-			return true
-		}
-	}
-	return false
+	return t.cards[c]
 }
 
 type cardHolderInterface interface {
