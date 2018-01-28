@@ -60,11 +60,11 @@ func (d deck) hasCard(c *card) bool {
 	return d.OpenCard() == c
 }
 
-// TODO: create map of string representation of cards' pointers
-func initDeckAndHands(d *deck, hand1, hand2 *hand) {
+func initDeckAndHands(d *deck, cm *CardsMap, hand1, hand2 *hand) {
 	for key, value := range cards {
 		for _, group := range value {
 			card := &card{key, group}
+			cm.add(card)
 			d.add(card)
 			hand1.add(card)
 			hand2.add(card)

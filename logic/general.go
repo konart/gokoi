@@ -1,5 +1,10 @@
 package logic
 
+import (
+	"encoding/json"
+	"log"
+)
+
 type cardHolder struct {
 	cards map[*card]bool
 }
@@ -29,4 +34,20 @@ func CheckCards(c *card, ch cardHolderInterface) bool {
 		return false
 	}
 	return true
+}
+
+type CardsMap struct {
+	cards map[string]*card
+}
+
+func (c *CardsMap) add(card *card) {
+	cardString, err := json.Marshal(card)
+	if err != nil {
+		log.Panic(err)
+	}
+	c.cards[string(cardString)] = card
+}
+
+func (c CardsMap) getCard(s string) *card {
+	return c.cards[s]
 }
