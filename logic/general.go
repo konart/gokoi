@@ -5,11 +5,11 @@ import (
 	"log"
 )
 
-// Initiates global deck and card map.
-func InitDeckAndMap(d deck, cm CardsMap) {
+// Initiates global Deck and Card map.
+func InitDeckAndMap(d Deck, cm CardsMap) {
 	for key, value := range cards {
 		for _, group := range value {
-			card := &card{key, group}
+			card := &Card{key, group}
 			cm.add(card)
 			d.add(card)
 		}
@@ -17,22 +17,22 @@ func InitDeckAndMap(d deck, cm CardsMap) {
 }
 
 type cardHolder struct {
-	cards map[*card]bool
+	cards map[*Card]bool
 }
 
-func (t *cardHolder) add(c *card) {
+func (t *cardHolder) add(c *Card) {
 	t.cards[c] = true
 }
 
-func (t cardHolder) hasCard(c *card) bool {
+func (t cardHolder) hasCard(c *Card) bool {
 	return t.cards[c]
 }
 
 type cardHolderInterface interface {
-	hasCard(*card) bool
+	hasCard(*Card) bool
 }
 
-func DealCards(d deck, t *table, p1, p2 *Player) {
+func DealCards(d Deck, t *table, p1, p2 *Player) {
 	for i := 0; i < 8; i++ {
 		p1.closedHand.add(d.PickCard())
 		p2.closedHand.add(d.PickCard())
@@ -40,7 +40,7 @@ func DealCards(d deck, t *table, p1, p2 *Player) {
 	}
 }
 
-func CheckCards(c *card, ch cardHolderInterface) bool {
+func CheckCards(c *Card, ch cardHolderInterface) bool {
 	if !ch.hasCard(c) {
 		return false
 	}
@@ -48,17 +48,17 @@ func CheckCards(c *card, ch cardHolderInterface) bool {
 }
 
 // A simple map to keep JSON representation of cards
-type CardsMap map[string]*card
+type CardsMap map[string]*Card
 
 // Returns a new CardsMap struct.
 func NewCardsMap() CardsMap {
-	m := make(map[string]*card)
+	m := make(map[string]*Card)
 	return m
 }
 
 // Adds new entry to a CardsMap
-// Key will be a JSON representation of a card struct.
-func (c CardsMap) add(card *card) {
+// Key will be a JSON representation of a Card struct.
+func (c CardsMap) add(card *Card) {
 	cardString, err := json.Marshal(card)
 	if err != nil {
 		log.Panic(err)
@@ -66,7 +66,7 @@ func (c CardsMap) add(card *card) {
 	c[string(cardString)] = card
 }
 
-// Returns a pointer to a card for a given JSON string
-func (c CardsMap) getCard(s string) *card {
+// Returns a pointer to a Card for a given JSON string
+func (c CardsMap) getCard(s string) *Card {
 	return c[s]
 }

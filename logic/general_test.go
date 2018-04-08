@@ -15,7 +15,7 @@ func TestCardsMap(t *testing.T) {
 		"plain1",
 		fmt.Sprintf(`{"suit":"%s","group":"%s"}`, "Pine", "plain1"),
 	}
-	card := &card{cardTest.suit, cardTest.group}
+	card := &Card{cardTest.suit, cardTest.group}
 
 	cm := NewCardsMap()
 	cm.add(card)

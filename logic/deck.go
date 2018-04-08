@@ -20,21 +20,25 @@ var cards = map[string][]string{
 	"Paulownia":     {"plain1", "plain2", "plain3", "bright"},
 }
 
-type card struct {
+type Card struct {
 	Suit  string `json:"suit"`
 	Group string `json:"group"`
 }
 
-// Stack of card pointers.
-type deck []*card
+// Stack of Card pointers.
+type Deck []*Card
 
-// Adds a pointer to a card to the stack.
-func (d *deck) add(c *card) {
+func NewDeck() Deck {
+	return Deck{}
+}
+
+// Adds a pointer to a Card to the stack.
+func (d *Deck) add(c *Card) {
 	*d = append(*d, c)
 }
 
 // Pops an element from a stack.
-func (d *deck) PickCard() *card {
+func (d *Deck) PickCard() *Card {
 	topCardIndex := len(*d) - 1
 	c := (*d)[topCardIndex]
 	*d = (*d)[:topCardIndex]
@@ -42,15 +46,15 @@ func (d *deck) PickCard() *card {
 }
 
 // Peek at the top element of the stack.
-func (d deck) OpenCard() *card {
+func (d Deck) OpenCard() *Card {
 	topCardIndex := len(d) - 1
 	c := d[topCardIndex]
 	return c
 }
 
-// Shuffles the deck
-func (d *deck) Shuffle() {
-	tempDeck := make([]*card, 48)
+// Shuffles the Deck
+func (d *Deck) Shuffle() {
+	tempDeck := make([]*Card, 48)
 	rand.Seed(time.Now().UTC().UnixNano())
 	list := rand.Perm(48)
 	for i, v := range list {
