@@ -21,57 +21,40 @@ var cards = map[string][]string{
 }
 
 type card struct {
-	suit  string
-	group string
+	Suit  string `json:"suit"`
+	Group string `json:"group"`
 }
 
-type deck struct {
-	cards []*card
-}
+// Stack of card pointers.
+type deck []*card
 
+// Adds a pointer to a card to the stack.
 func (d *deck) add(c *card) {
-	d.cards = append(d.cards, c)
+	*d = append(*d, c)
 }
 
+// Pops an element from a stack.
 func (d *deck) PickCard() *card {
-	topCardIndex := len(d.cards) - 1
-	c := d.cards[topCardIndex]
-	d.cards = d.cards[:topCardIndex]
+	topCardIndex := len(*d) - 1
+	c := (*d)[topCardIndex]
+	*d = (*d)[:topCardIndex]
 	return c
 }
 
+// Peek at the top element of the stack.
 func (d deck) OpenCard() *card {
-	topCardIndex := len(d.cards) - 1
-	c := d.cards[topCardIndex]
+	topCardIndex := len(d) - 1
+	c := d[topCardIndex]
 	return c
 }
 
+// Shuffles the deck
 func (d *deck) Shuffle() {
 	tempDeck := make([]*card, 48)
 	rand.Seed(time.Now().UTC().UnixNano())
 	list := rand.Perm(48)
 	for i, v := range list {
-		tempDeck[i] = (d.cards)[v]
+		tempDeck[i] = (*d)[v]
 	}
-	d.cards = tempDeck
-}
-
-func (d deck) hasCard(c *card) bool {
-	return d.OpenCard() == c
-}
-
-func initDeckAndHands(d *deck, cm *CardsMap, hand1, hand2 *hand) {
-	for key, value := range cards {
-		for _, group := range value {
-			card := &card{key, group}
-			cm.add(card)
-			d.add(card)
-			hand1.add(card)
-			hand2.add(card)
-		}
-	}
-}
-
-func PrepareDeck(d *deck) {
-	d.Shuffle()
+	*d = tempDeck
 }
