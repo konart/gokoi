@@ -1,4 +1,4 @@
-package main
+package temp
 
 type Rule struct{}
 
