@@ -5,6 +5,17 @@ import (
 	"log"
 )
 
+// Initiates global deck and card map.
+func InitDeckAndMap(d deck, cm CardsMap) {
+	for key, value := range cards {
+		for _, group := range value {
+			card := &card{key, group}
+			cm.add(card)
+			d.add(card)
+		}
+	}
+}
+
 type cardHolder struct {
 	cards map[*card]bool
 }
@@ -36,18 +47,26 @@ func CheckCards(c *card, ch cardHolderInterface) bool {
 	return true
 }
 
-type CardsMap struct {
-	cards map[string]*card
+// A simple map to keep JSON representation of cards
+type CardsMap map[string]*card
+
+// Returns a new CardsMap struct.
+func NewCardsMap() CardsMap {
+	m := make(map[string]*card)
+	return m
 }
 
-func (c *CardsMap) add(card *card) {
+// Adds new entry to a CardsMap
+// Key will be a JSON representation of a card struct.
+func (c CardsMap) add(card *card) {
 	cardString, err := json.Marshal(card)
 	if err != nil {
 		log.Panic(err)
 	}
-	c.cards[string(cardString)] = card
+	c[string(cardString)] = card
 }
 
+// Returns a pointer to a card for a given JSON string
 func (c CardsMap) getCard(s string) *card {
-	return c.cards[s]
+	return c[s]
 }
